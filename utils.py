@@ -27,7 +27,7 @@ def parseArguments():
     parser.add_argument("-R", "--R", help="replica index", type=int, default=1)
     # Data specification
     parser.add_argument("-P", "--P", help="size of training set", type=int, default=500)
-    parser.add_argument("-Ptest", "--Ptest", help="# examples in test set", type=int, default=500)    
+    parser.add_argument("-Ptest", "--Ptest", help="# examples in test set", type=int, default=1000)    
     # Theory computation
     parser.add_argument("-compute_theory", type = bool, default= False)
     parser.add_argument("-only_theo", type = bool, default= False)

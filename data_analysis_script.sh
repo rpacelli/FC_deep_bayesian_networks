@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Specify the arguments you want 
-dir_name="runs"
 L=1
 act="erf"
 k=2 #how many lines until thermalisation in the run file
-
-# Define the file name to copy
-file_name="data_analysis.py"
+curr_dir=$(pwd)
+file_name="${curr_dir}/data_analysis.py"
 # Define the directories to search for folders
+cd ..
+dir_name="runs"
 search_dirs=("${dir_name}/teacher_cifar10_net_${L}hl_actf_${act}/" "${dir_name}/teacher_mnist_net_${L}hl_actf_${act}/")
 
 # Loop through the search directories
