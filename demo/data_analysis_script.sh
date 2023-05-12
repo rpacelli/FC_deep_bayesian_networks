@@ -3,7 +3,7 @@
 # Specify the arguments you want 
 L=1
 act="erf"
-k=2 #how many lines until thermalisation in the run file
+k=50 #how many lines until thermalisation in the run file
 curr_dir=$(pwd)
 file_name="${curr_dir}/data_analysis.py"
 # Define the directories to search for folders
