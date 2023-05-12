@@ -1,6 +1,6 @@
 # FC deep bayesian networks
 
-This repo contains all the code necessary to reproduces results obtained in "PAPER TITLE", that is:
+This repo contains all the code necessary to reproduces results obtained in "A Statistical Mechanics framework for deep neural networks beyond the infinite-width limit", that is:
 - Training of deep fully connected networks in the bayesian setting (with discretised langevin dynamics) 
 - Theory computation 
 
