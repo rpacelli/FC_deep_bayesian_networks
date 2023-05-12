@@ -9,3 +9,5 @@ for data in "${datasets[@]}"; do
         done
     done
 done
+
+python plot_fig1a.py
