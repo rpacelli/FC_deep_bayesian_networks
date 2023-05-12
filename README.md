@@ -1,6 +1,8 @@
-# deepL_beyond_infwidth
+# FC deep bayesian networks
 
-This code trains deep fully connected networks on regression tasks with quadratic loss function in a teacher-student bayesian setting.
+This repo contains all the code necessary to reproduces results obtained in "PAPER TITLE", that is:
+- Training of deep fully connected networks in the bayesian setting (with discretised langevin dynamics) 
+- Theory computation 
 
 The script to be run is ```main.py```.  
 
@@ -38,12 +40,6 @@ The optional arguments that can be passed are:
 Ouput files are stored in the ```./runs/``` repository in your working directory. 
 The script will output a file ```run_P_(value_of_P)_(run_attributes)``` with the specifications of the single run (epoch, train error, test error), and if prompted will also produce a file with the theoretical expected quantities (P, N1, Qbar, expected error).
  
-### Example command prompt line
-```
-python deep_regression.py cifar10 -L 3 -N 784 -N1 300 -act relu -compute_theory True -infwidth True
-```
-This will train a 3hl architecture with relu activation functions and hidden layers of size N1 = 300 on a regression task on the cifar10 dataset. The data will be coarse grained to a size of 28x28 and the infinite width predicted theory will be computed.
-
 
 ### Conda environment
 
@@ -57,8 +53,13 @@ then activate it with:
 To install conda visit https://conda.io/projects/conda/en/stable/user-guide/install/index.html
 
 
-### Data analysis
+### Example command prompt line
+```
+python main.py cifar10 -L 3 -N 784 -N1 300 -act relu -compute_theory True -infwidth True
+```
+This will train a 3hl architecture with relu activation functions and hidden layers of size N1 = 300 on P = 100 cifar10 examples. The data will be coarse grained to a size of 28x28 and the infinite width predicted theory will be computed.
 
+### Paper results reproducibility
 
-
+Running the code with default values 
 
