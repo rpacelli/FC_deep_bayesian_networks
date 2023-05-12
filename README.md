@@ -43,3 +43,22 @@ The script will output a file ```run_P_(value_of_P)_(run_attributes)``` with the
 python deep_regression.py cifar10 -L 3 -N 784 -N1 300 -act relu -compute_theory True -infwidth True
 ```
 This will train a 3hl architecture with relu activation functions and hidden layers of size N1 = 300 on a regression task on the cifar10 dataset. The data will be coarse grained to a size of 28x28 and the infinite width predicted theory will be computed.
+
+
+### Conda environment
+
+To avoid compatibility issues, a conda environment is provided for linux machines. You can create the environment from the file ```env.yml``` running the following line: 
+
+```conda env create -n deep_bayesian --file env.yml```
+
+then activate it with:
+``` conda activate deep_bayesian ```
+
+To install conda visit https://conda.io/projects/conda/en/stable/user-guide/install/index.html
+
+
+### Data analysis
+
+
+
+
