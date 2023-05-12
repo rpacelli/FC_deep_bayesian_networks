@@ -1,7 +1,6 @@
 
-import torch, torchvision, torchvision.transforms as t   
+import torch, torchvision, torchvision.transforms as t 
 import numpy as np
-import os 
 
 class mnist_dataset: 
     def __init__(self, N,):
@@ -15,7 +14,7 @@ class mnist_dataset:
             t.Resize(size=self.side_size),
             t.ToTensor(),
             t.Normalize((0.1307,), (0.3081,)),
-            t.Lambda(lambda x: torch.flatten(x)) #in case you have to flatten
+            t.Lambda(lambda x: torch.flatten(x))
         ])
         return T
 
@@ -53,7 +52,7 @@ class cifar_dataset:
             t.ToTensor(),
             t.Grayscale(),
             t.Normalize((0.1307,), (0.3081,)),
-            t.Lambda(lambda x: torch.flatten(x)) #in case you have to flatten
+            t.Lambda(lambda x: torch.flatten(x))
         ])
         return T
 

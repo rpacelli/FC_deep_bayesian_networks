@@ -44,7 +44,6 @@ def test_error(data,x,y,labels,lambda1,invK,Qbar,lambda0,kernel, L):
         k0yy = k0(data[i],data[i],lambda0)
         k0yyvec[i] = k0yy
         Kmu[i] = kernel(k0xx,k0xy,k0yy,lambda1) if L ==1 else kernel(k0xx,k0xy,k0yy,lambda0)
-    
     k0xx = kernel(k0xx,k0xx,k0xx,lambda1) if L==1 else kernel(k0xx,k0xx,k0xx,lambda0)
     for l in range(L-1):
         if l== L-2:
@@ -59,14 +58,14 @@ def test_error(data,x,y,labels,lambda1,invK,Qbar,lambda0,kernel, L):
     K0_invK = np.matmul(Kmu, invK)
     bias = -np.dot(K0_invK, labels) + y
     var = -np.dot(K0_invK, Kmu) + k0xx
-    return bias**2 - Qbar*var
+    pred_err = bias**2 - Qbar*var
+    return pred_err.item()
 
 def qbar(labels, invK, N1,lambda1):
     P = len(labels)
     alpha1 = P/N1
-    print(alpha1)
     yky = np.matmul(np.matmul(np.transpose(labels), invK), labels)
-    print(f'\ny K^(-1) y /P is {yky/P}')
+    print(f'\ns /P is {yky/P}')
     return ((alpha1-1)-np.sqrt((alpha1-1)**2 + 4*alpha1*yky/P))/2, yky/P
 
 def compute_theory(data, labels, test_data, test_labels, N1, lambda1,lambda0,act,L,infwidth):
@@ -75,24 +74,18 @@ def compute_theory(data, labels, test_data, test_labels, N1, lambda1,lambda0,act
     Ptest = len(test_labels)
     data,labels, test_data, test_labels  = data.detach().cpu(),labels.detach().cpu(),test_data.detach().cpu(),test_labels.detach().cpu()
     K = CorrMat(P,data,lambda0)
-    if act == "erf":
-        kernel = kernel_erf
-    else:
-        print("here")
-        kernel = kernel_relu
+    kernel = eval(f"kernel_{act}")
     for i in range(L):
         K = kmatrix(P,K,kernel,lambda1)
-        np.savetxt( f"kmatrix_layer_{i+1}_P_{P}.txt",K)
     invK = np.linalg.inv(K)
     Qbar = np.array(-1)
     yky = np.array(1.)
     if not infwidth:
         Qbar, yky = qbar(labels, invK, N1, lambda1)
-    #Qbar = np.array(-1)
     print(f"\nbar Q is {Qbar}")
     pred_loss = 0
     for p in range(Ptest):
         x,y = np.array(test_data[p]),np.array(test_labels[p])
-        pred_loss += test_error(data, x, y, labels, lambda1, invK, Qbar,lambda0,kernel,L).item()
+        pred_loss += test_error(data, x, y, labels, lambda1, invK, Qbar,lambda0,kernel,L)
     pred_loss = pred_loss/Ptest
-    return pred_loss, Qbar,yky
+    return pred_loss, Qbar.item(), yky.item()

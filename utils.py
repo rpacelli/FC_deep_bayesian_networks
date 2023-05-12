@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os, os.path,time,argparse
 import numpy as np
 import torch, torch.nn as nn
@@ -15,11 +14,13 @@ def parseArguments():
     # Net arguments
     parser.add_argument("-L", help="number of hidden layers", type=int, default=1)
     parser.add_argument("-N", "--N", help="size of input data", type=int, default=784)
-    parser.add_argument("-N1", "--N1", help="size ofh idden layer(s)", type=int, default=400)    
+    parser.add_argument("-N1", "--N1", help="size ofh idden layer(s)", type=int, default=500)    
     parser.add_argument("-act", help="activation function, choose between erf and relu", type=str, default="erf")
     # Learning dynamics arguments
     parser.add_argument("-lr", "--lr", help="learning rate", type=float, default=1e-03)
     parser.add_argument("-T", "--T", help="temperature", type=float, default=1e-03)
+    parser.add_argument("-lambda1", help="gaussian prior of last layer",type = float, default= 1.)
+    parser.add_argument("-lambda0",help="gaussian prior of all other layers", type = float, default= 1.)
     parser.add_argument("-device", "--device",help="choose between cuda and cpu",   type=str, default="cpu")
     parser.add_argument("-epochs", "--epochs", help="number of train epochs", type = int, default = 5000000)
     parser.add_argument("-checkpoint", "--checkpoint", help="# epochs checkpoint", type=int, default=10000)
@@ -31,8 +32,7 @@ def parseArguments():
     parser.add_argument("-compute_theory", type = bool, default= False)
     parser.add_argument("-only_theo", type = bool, default= False)
     parser.add_argument("-infwidth", help="compute infinite width theory", type = bool, default= False)
-    parser.add_argument("-lambda1", type = float, default= 1.)
-    parser.add_argument("-lambda0", type = float, default= 1.)
+
     args = parser.parse_args()
     return args
 
@@ -62,21 +62,6 @@ def test(net, test_data, test_labels, criterion):
                 inputs, targets = test_data, (test_labels).unsqueeze(1)
                 outputs = net(inputs)
                 loss = criterion(outputs, targets) 
-        return loss.item()
-
-def test_accuracy(net, test_data, test_labels, criterion):
-        net.eval()
-        test_loss = 0
-        P_test = len(test_data)
-        with torch.no_grad():
-                inputs, targets = test_data, (test_labels).unsqueeze(1)
-                outputs = torch.round(net(inputs))
-                for j in range(len(outputs)):
-                    if outputs[j] <= 0: 
-                        outputs[j]==0
-                    else:
-                        outputs[j]==1
-                loss = torch.sum(outputs == targets)/len(outputs)
         return loss.item()
 
 class Erf(torch.nn.Module):
@@ -120,7 +105,7 @@ class FCNet:
         modules.append(act)
         modules.append(Norm(np.sqrt(self.N1)))
         last_layer = nn.Linear(self.N1, 1, bias=bias)  
-        init.normal_(last_layer.weight, std = 1)  
+        init.normal_(last_layer.weight, std = 1) 
         if bias:
                 init.normal_(last_layer.bias,std = 1)
         modules.append(last_layer)
@@ -146,24 +131,7 @@ def cuda_init(net, device):
         cudnn.benchmark = True
         CUDA_LAUNCH_BLOCKING=1
 
-def make_directory(dir_name):
-    if not os.path.isdir(dir_name): 
-	    os.mkdir(dir_name)
-
-def make_folders(mother_dir, args):
-    #CREATION OF 2ND FOLDER WITH TEACHER & NETWORK SPECIFICATIONS
-    first_subdir = mother_dir + f'teacher_{args.teacher_type}_net_{args.L}hl_actf_{args.act}/'
-    make_directory(first_subdir)
-    #CREATION OF 3RD FOLDER WITH RUN SPECIFICATIONS
-    attributes_string = f'lr_{args.lr}_T_{args.T}_lambda0_{args.lambda0}_lambda1_{args.lambda1}_'
-    attributes_string = attributes_string + f"{args.L}hl_N0_{args.N}_N_{args.N1}"
-    run_folder = first_subdir + attributes_string + '/'
-    make_directory(run_folder)
-    return first_subdir, run_folder
-
-
 class LangevinOpt(optim.Optimizer):
-    """Implements Langevin (GD+noise) optimizer for L hidden layer FCN."""
     def __init__(self, model: nn.Module, lr, temperature):
         defaults = {
             'lr': lr,
@@ -187,7 +155,6 @@ class LangevinOpt(optim.Optimizer):
                 d_p = torch.randn_like(parameter) * (2*learning_rate*temperature)**0.5
                 d_p.add_(parameter.grad, alpha=-learning_rate)
                 parameter.add_(d_p)
-#parameter = parameter - learning_rate * parameter.grad - learning_rate * weight_decay * parameter + sqrt(2*learning_rate*temperature) * noise
 
 def reg_loss(output, target,net,T,lambda0,lambda1):
     loss = 0
@@ -200,3 +167,17 @@ def reg_loss(output, target,net,T,lambda0,lambda1):
             
     loss += 0.5*torch.sum((output - target)**2)
     return loss
+
+def make_directory(dir_name):
+    if not os.path.isdir(dir_name): 
+	    os.mkdir(dir_name)
+
+def make_folders(root_dir, args):
+    #CREATION OF 2ND FOLDER WITH TEACHER & NETWORK SPECIFICATIONS
+    first_subdir = root_dir + f'teacher_{args.teacher_type}_net_{args.L}hl_actf_{args.act}/'
+    make_directory(first_subdir)
+    #CREATION OF 3RD FOLDER WITH RUN SPECIFICATIONS
+    attributes_string = f'lr_{args.lr}_T_{args.T}_lambda0_{args.lambda0}_lambda1_{args.lambda1}_{args.L}hl_N_{args.N}_N1_{args.N1}'
+    run_folder = first_subdir + attributes_string + '/'
+    make_directory(run_folder)
+    return first_subdir, run_folder
