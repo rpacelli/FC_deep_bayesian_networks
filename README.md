@@ -1,8 +1,8 @@
 # deepL_beyond_infwidth
 
-This code trains deep fully connected networks on regression tasks with quadratic loss function in a teacher-student setting.
+This code trains deep fully connected networks on regression tasks with quadratic loss function in a teacher-student bayesian setting.
 
-The script to be run is ```deep_regression.py```.  
+The script to be run is ```main.py```.  
 
 ### Arguments
 
