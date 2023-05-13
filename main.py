@@ -1,6 +1,5 @@
 import utils, teachers 
 from theory import compute_theory
-from torch.optim.lr_scheduler import StepLR
 
 start_time = utils.time.time()
 args = utils.parseArguments()
