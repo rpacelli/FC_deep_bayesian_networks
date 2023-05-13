@@ -36,17 +36,9 @@ def parseArguments():
     args = parser.parse_args()
     return args
 
-def train_prep(net, data, labels):
-    net.train()
-    P = len(data)
-    s = np.arange(P)
-    np.random.shuffle(s)
-    data = data[s]
-    labels = labels[s]
-    return data, labels
 
 def train(net,data, labels, criterion, optimizer,T,lambda0,lambda1):
-    data, labels = train_prep(net, data, labels)
+    net.train()
     inputs, targets = data, (labels).unsqueeze(1)
     optimizer.zero_grad()
     outputs = net(inputs)
