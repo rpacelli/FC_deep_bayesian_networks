@@ -8,7 +8,7 @@ The script to be run is ```main.py```.
 
 ### Arguments
 
-The **mandatory** argument that must passed to ```deep_regression.py```is the **teacher type**. This is the function that will generate the input-output distribution. It can be chosen among: 
+The **mandatory** argument that must passed to ```main.py```is the **teacher type**. This is the function that will generate the input-output distribution. It can be chosen among: 
   - ```random``` (random data and labels)
   - ```mnist``` (0/1 classes of MNIST)
   - ```cifar10``` ("cars" and "planes" classes of CIFAR10) 
