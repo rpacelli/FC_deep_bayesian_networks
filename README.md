@@ -1,4 +1,5 @@
 # FC deep bayesian networks
+[![DOI](https://zenodo.org/badge/639854132.svg)](https://zenodo.org/badge/latestdoi/639854132)
 
 This repo contains all the code necessary to reproduces results obtained in "A Statistical Mechanics framework for deep neural networks beyond the infinite-width limit", that is:
 - Training of deep fully connected networks in the bayesian setting (with discretised langevin dynamics) 
