@@ -1,5 +1,7 @@
 from __future__ import print_function
 import numpy as np
+import torch
+from scipy.optimize import minimize
 
 def k0(x,y,lambda0):
     N0 = len(x)
@@ -57,35 +59,53 @@ def test_error(data,x,y,labels,lambda1,invK,Qbar,lambda0,kernel, L):
         k0xx = kernel(k0xx,k0xx,k0xx,Lambda)
     K0_invK = np.matmul(Kmu, invK)
     bias = -np.dot(K0_invK, labels) + y
-    var = -np.dot(K0_invK, Kmu) + k0xx
-    pred_err = bias**2 - Qbar*var
+    var = -Qbar/lambda1*np.dot(K0_invK, Kmu) + k0xx
+    pred_err = bias**2 + Qbar/lambda1*var
     return pred_err.item()
 
-def qbar(labels, invK, N1,lambda1):
-    P = len(labels)
-    alpha1 = P/N1
-    yky = np.matmul(np.matmul(np.transpose(labels), invK), labels)
-    print(f'\ns /P is {yky/P}')
-    return ((alpha1-1)-np.sqrt((alpha1-1)**2 + 4*alpha1*yky/P))/2, yky/P
 
-def compute_theory(data, labels, test_data, test_labels, N1, lambda1,lambda0,act,L,infwidth):
+def compute_theory(data, labels, test_data, test_labels, args):
     P = len(labels)
     N0 = len(data[0])
     Ptest = len(test_labels)
     data,labels, test_data, test_labels  = data.detach().cpu(),labels.detach().cpu(),test_data.detach().cpu(),test_labels.detach().cpu()
-    K = CorrMat(P,data,lambda0)
-    kernel = eval(f"kernel_{act}")
-    for i in range(L):
-        K = kmatrix(P,K,kernel,lambda1)
-    invK = np.linalg.inv(K)
-    Qbar = np.array(-1)
+    targets =  torch.tensor(labels, dtype = torch.float64)
+    K = CorrMat(P,data,args.lambda0)
+    kernel = eval(f"kernel_{args.act}")
+    for i in range(args.L):
+        K = kmatrix(P,K,kernel,args.lambda1)
+    
+    Qbar = np.array(1)
     yky = np.array(1.)
-    if not infwidth:
-        Qbar, yky = qbar(labels, invK, N1, lambda1)
+    ktensor = torch.from_numpy(K)
+    if not args.infwidth:
+        [K_eigval, K_eigvec] = np.linalg.eig(K)
+        U = K_eigvec
+        #print(U)
+        Udag = np.transpose(U)
+        diag_K = np.diagflat(K_eigval)
+        ytilde = np.matmul( Udag, targets.squeeze())
+        x0 = 1.0
+        bns = ((1e-8,np.inf),)
+        params = args.T, args.P,args.N1,args.lambda1,diag_K,K_eigval,ytilde
+        res = minimize(S, x0, bounds=bns, tol=1e-20,args = params)
+        Qbar = (res.x).item()
     print(f"\nbar Q is {Qbar}")
+    invK = np.linalg.inv(Qbar/args.lambda1*K+ (args.T)*np.eye(P))
+    yky = np.matmul(np.matmul(np.transpose(labels), invK), labels)
+    print(f'\ns /P is {yky/args.P}')
     pred_loss = 0
     for p in range(Ptest):
         x,y = np.array(test_data[p]),np.array(test_labels[p])
-        pred_loss += test_error(data, x, y, labels, lambda1, invK, Qbar,lambda0,kernel,L)
+        pred_loss += test_error(data, x, y, labels, args.lambda1, invK, Qbar,args.lambda0,kernel,args.L)
     pred_loss = pred_loss/Ptest
-    return pred_loss, Qbar.item(), yky.item()
+    return pred_loss, Qbar, yky.item()
+
+def S(x, *params):
+    T, P,N1,lambda1,diag_K,K_eigval,ytilde = params 
+    HH = T * np.identity(P) + (x/lambda1) * diag_K
+    HH_inv = np.linalg.inv(HH)
+    part_1 = -1 + x + np.log(1/x)
+    part_2 = (1/N1) * np.sum(np.log(T + x*K_eigval/lambda1))
+    part_3 = (1/(lambda1 * N1)) * np.dot(ytilde, np.dot(HH_inv, ytilde))
+    return (part_1 + part_2 + part_3)

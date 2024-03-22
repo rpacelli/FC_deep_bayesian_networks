@@ -30,7 +30,7 @@ if args.compute_theory:
 		with open(theoryFilename,"a") as f:
 			print('#1 P', '2 N1', '3 Qbar', '4 pred error', '5 s/P', file = f)
 	start_time = utils.time.time()
-	gen_error_pred, Qbar,yky = compute_theory(inputs, targets, test_inputs, test_targets, args.N1, args.lambda1, args.lambda0,args.act,args.L,args.infwidth)
+	gen_error_pred, Qbar,yky = compute_theory(inputs, targets, test_inputs, test_targets, args)
 	with open(theoryFilename, "a") as f:
 		print(args.P, args.N1, Qbar, gen_error_pred, yky,file = f)
 	print(f"\nPredicted error is: {gen_error_pred} \n theory computation took - {utils.time.time() - start_time} seconds -")
