@@ -19,6 +19,8 @@ if args.teacher_type == 'mnist':
 	teacher_class = teachers.mnist_dataset(args.N)
 elif args.teacher_type == 'cifar10': 
 	teacher_class = teachers.cifar_dataset(args.N)
+elif args.teacher_type == 'emnist': 
+	teacher_class = teachers.cifar_dataset(args.N, "ABEL-CHJS")
 elif args.teacher_type == 'random': 
 	teacher_class = teachers.random_dataset(args.N)
 
