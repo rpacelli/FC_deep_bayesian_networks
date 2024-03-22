@@ -1,4 +1,5 @@
-import utils, teachers 
+import utils
+import tasks as teachers 
 from theory import compute_theory
 
 start_time = utils.time.time()
@@ -20,12 +21,12 @@ if args.teacher_type == 'mnist':
 elif args.teacher_type == 'cifar10': 
 	teacher_class = teachers.cifar_dataset(args.N)
 elif args.teacher_type == 'emnist': 
-	teacher_class = teachers.cifar_dataset(args.N, "ABEL-CHJS")
+	teacher_class = teachers.emnist_dataset(args.N,(0,1), "ABEL-CHJS")
 elif args.teacher_type == 'random': 
 	teacher_class = teachers.random_dataset(args.N)
 
 #CRREATION OF DADTASET AND THEORY CALCULATION
-inputs, targets, test_inputs, test_targets = teacher_class.make_data(args.P, args.Ptest, device)
+inputs, targets, test_inputs, test_targets = teacher_class.make_data(args.P, args.Ptest, 60000)
 theoryFilename = f"{first_subdir}theory_N_{args.N}_lambda0_{args.lambda0}_lambda1_{args.lambda1}.txt"
 if args.compute_theory:
 	if not utils.os.path.isfile(theoryFilename):
