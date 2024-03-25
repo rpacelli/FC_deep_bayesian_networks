@@ -82,26 +82,20 @@ class emnist_dataset:
         self.selectedLabels = selectedLabels
         self.whichTask = whichTask
     
-    def get_dataset_emnist(self,x_train, y_train, x_test, y_test, which_norm = 'norm_1'):
-
+    def get_dataset_emnist(self,x_train, y_train, x_test, y_test):
         if self.whichTask not in ["ABEL-CHJS", "ABFL-CHIS"]:
             raise Exception("Sorry, no task found!")
         elif self.whichTask == 'ABEL-CHJS':
-            x_train -= x_train.mean()
-            x_train /= x_train.std()
             x_train_g1 = np.concatenate([x_train[(y_train == 1)], x_train[(y_train == 2)], x_train[(y_train == 5)], x_train[(y_train == 12)]])
             x_train_g2 = np.concatenate([x_train[(y_train == 3)], x_train[(y_train == 8)], x_train[(y_train == 10)], x_train[(y_train == 19)]])
             y_train_g1 = np.zeros(len(x_train_g1))
             y_train_g2 = np.ones(len(x_train_g2))
             x_train = np.concatenate([x_train_g1, x_train_g2])
             y_train = np.concatenate([y_train_g1, y_train_g2])
-            rp = np.random.permutation(len(y_train))
-            x_train = x_train[rp[:self.P]]
-            y_train = y_train[rp[:self.P]]
+            #rp = np.random.permutation(len(y_train))
+            #x_train = x_train[rp[:self.P]]
+            #y_train = y_train[rp[:self.P]]
             y_train = 2 * y_train - 1
-            #test
-            x_test -= x_test.mean()
-            x_test /= x_test.std()
             x_test_g1 = np.concatenate([x_test[(y_test == 1)], x_test[(y_test == 2)], x_test[(y_test == 5)], x_test[(y_test == 12)]])
             x_test_g2 = np.concatenate([x_test[(y_test == 3)], x_test[(y_test == 8)], x_test[(y_test == 10)], x_test[(y_test == 19)]])
             y_test_g1 = np.zeros(len(x_test_g1))
@@ -109,24 +103,14 @@ class emnist_dataset:
             x_test = np.concatenate([x_test_g1, x_test_g2])
             y_test = np.concatenate([y_test_g1, y_test_g2])
             y_test = 2 * y_test - 1
-            rp_test = np.random.permutation(len(y_test))
         elif self.whichTask == 'ABFL-CHIS':
-
-            x_train -= x_train.mean()
-            x_train /= x_train.std()
             x_train_g1 = np.concatenate([x_train[(y_train == 1)], x_train[(y_train == 2)], x_train[(y_train == 6)], x_train[(y_train == 12)]])
             x_train_g2 = np.concatenate([x_train[(y_train == 3)], x_train[(y_train == 8)], x_train[(y_train == 9)], x_train[(y_train == 19)]])
             y_train_g1 = np.zeros(len(x_train_g1))
             y_train_g2 = np.ones(len(x_train_g2))
             x_train = np.concatenate([x_train_g1, x_train_g2])
             y_train = np.concatenate([y_train_g1, y_train_g2])
-            rp = np.random.permutation(len(y_train))
-            x_train = x_train[rp[:self.P]]
-            y_train = y_train[rp[:self.P]]
             y_train = 2 * y_train - 1
-            print(y_train)
-            x_test -= x_test.mean()
-            x_test /= x_test.std()
             x_test_g1 = np.concatenate([x_test[(y_test == 1)], x_test[(y_test == 2)], x_test[(y_test == 6)], x_test[(y_test == 12)]])
             x_test_g2 = np.concatenate([x_test[(y_test == 3)], x_test[(y_test == 8)], x_test[(y_test == 9)], x_test[(y_test == 19)]])
             y_test_g1 = np.zeros(len(x_test_g1))
@@ -135,9 +119,16 @@ class emnist_dataset:
             y_test = np.concatenate([y_test_g1, y_test_g2])
             y_test = 2 * y_test - 1
             print(y_test)
-            rp_test = np.random.permutation(len(y_test))
+        x_train = x_train[:self.P]
+        y_train = y_train[:self.P]
+        x_test =  x_test[:self.Ptest]
+        y_test = y_test[:self.Ptest]
         x_train, y_train, x_test, y_test = torch.tensor(x_train, dtype=torch.float), torch.tensor(y_train, dtype=torch.float), torch.tensor(x_test, dtype=torch.float), torch.tensor(y_test, dtype=torch.float)
-        return x_train, y_train, x_test[rp_test[:self.Ptest]], y_test[rp_test[:self.Ptest]]
+        x_train -= x_train.mean()
+        x_train /= x_train.std()
+        x_test -= x_train.mean()
+        x_test /= x_train.std()
+        return x_train, y_train, x_test, y_test 
 
     def make_data(self, P, Ptest, batch_size):
         self.P = P 

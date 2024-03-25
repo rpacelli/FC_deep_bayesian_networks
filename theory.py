@@ -15,27 +15,27 @@ def CorrMat(P,data,lambda0):
             C[j][i] = C[i][j]
     return C  
 
-def kmatrix(P,C,kernel,lambda1):
+def kmatrix(P,C,kernel):
     K = np.zeros((P,P))
     for i in range(P): 
         for j in range(i,P):         
-            K[i][j] = kernel(C[i][i], C[i][j], C[j][j],lambda1)
+            K[i][j] = kernel(C[i][i], C[i][j], C[j][j])
             K[j][i] = K[i][j]
     return K
 
-def kernel_erf(k0xx,k0xy,k0yy,lambda1):
-    return (2/(lambda1*np.pi))*np.arcsin((2*k0xy)/np.sqrt((1+2*k0xx)*(1+2*k0yy)))
+def kernel_erf(k0xx,k0xy,k0yy):
+    return (2/(np.pi))*np.arcsin((2*k0xy)/np.sqrt((1+2*k0xx)*(1+2*k0yy)))
 
 def kappa1(u):
     return (1/(2*np.pi))*(u * (np.pi - np.arccos(u))+ np.sqrt(1-u**2))   
 
-def kernel_relu(k0xx, k0xy, k0yy,lambda1):
+def kernel_relu(k0xx, k0xy, k0yy):
     if k0xy == k0xx:
-        return np.sqrt(k0xx*k0yy)/(lambda1*2)
+        return np.sqrt(k0xx*k0yy)/(2)
     else:
         u = k0xy/np.sqrt(k0xx*k0yy)
         kappa = kappa1(u)
-        return np.sqrt(k0xx*k0yy)*kappa/(lambda1)
+        return np.sqrt(k0xx*k0yy)*kappa
 
 def test_error(data,x,y,labels,lambda1,invK,Qbar,lambda0,kernel, L):
     P = len(data)
@@ -45,18 +45,18 @@ def test_error(data,x,y,labels,lambda1,invK,Qbar,lambda0,kernel, L):
         k0xy = k0(x,data[i],lambda0)
         k0yy = k0(data[i],data[i],lambda0)
         k0yyvec[i] = k0yy
-        Kmu[i] = kernel(k0xx,k0xy,k0yy,lambda1) if L ==1 else kernel(k0xx,k0xy,k0yy,lambda0)
-    k0xx = kernel(k0xx,k0xx,k0xx,lambda1) if L==1 else kernel(k0xx,k0xx,k0xx,lambda0)
+        Kmu[i] = (1/lambda1)*kernel(k0xx,k0xy,k0yy) if L ==1 else (1/lambda0)*kernel(k0xx,k0xy,k0yy)
+    k0xx = (1/lambda1)*kernel(k0xx,k0xx,k0xx) if L==1 else (1/lambda0)*kernel(k0xx,k0xx,k0xx)
     for l in range(L-1):
         if l== L-2:
             Lambda = lambda1
         else:
             Lambda = lambda0 
         for i in range(P):
-            k0yy = kernel(k0yyvec[i],k0yyvec[i],k0yyvec[i],Lambda)
+            k0yy = (Qbar/Lambda)*kernel(k0yyvec[i],k0yyvec[i],k0yyvec[i])
             k0yyvec[i] = k0yy
-            Kmu[i] = kernel(k0xx,Kmu[i],k0yy,Lambda) 
-        k0xx = kernel(k0xx,k0xx,k0xx,Lambda)
+            Kmu[i] = (Qbar/Lambda)*kernel(k0xx,Kmu[i],k0yy) 
+        k0xx = (Qbar/Lambda)*kernel(k0xx,k0xx,k0xx)
     K0_invK = np.matmul(Kmu, invK)
     bias = -np.dot(K0_invK, labels) + y
     var = -Qbar/lambda1*np.dot(K0_invK, Kmu) + k0xx
@@ -69,11 +69,11 @@ def compute_theory(data, labels, test_data, test_labels, args):
     N0 = len(data[0])
     Ptest = len(test_labels)
     data,labels, test_data, test_labels  = data.detach().cpu(),labels.detach().cpu(),test_data.detach().cpu(),test_labels.detach().cpu()
-    targets =  torch.tensor(labels, dtype = torch.float64)
+    #targets =  torch.tensor(labels, dtype = torch.float64)
     K = CorrMat(P,data,args.lambda0)
     kernel = eval(f"kernel_{args.act}")
     for i in range(args.L):
-        K = kmatrix(P,K,kernel,args.lambda1)
+        K = kmatrix(P,K,kernel)
     
     Qbar = np.array(1)
     yky = np.array(1.)
@@ -84,7 +84,7 @@ def compute_theory(data, labels, test_data, test_labels, args):
         #print(U)
         Udag = np.transpose(U)
         diag_K = np.diagflat(K_eigval)
-        ytilde = np.matmul( Udag, targets.squeeze())
+        ytilde = np.matmul( Udag, labels.squeeze())
         x0 = 1.0
         bns = ((1e-8,np.inf),)
         params = args.T, args.P,args.N1,args.lambda1,diag_K,K_eigval,ytilde
